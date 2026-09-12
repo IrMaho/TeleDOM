@@ -225,3 +225,41 @@ export function buildToolCatalog(): ToolDiscoveryInfo[] {
 export function findGroupOfTool(toolName: string): ToolGroupInfo | undefined {
   return TOOL_GROUPS.find((g) => g.tools.includes(toolName));
 }
+
+export type TeledomProfileName = 'minimal' | 'core' | 'forensics' | 'full';
+
+export const TELEDOM_PROFILE_TOOLS: Record<string, string[] | null> = {
+  // Minimal profile: strictly essential browser actions (~22 tools, ~2.5k tokens)
+  minimal: [
+    'td_browser_navigate', 'td_browser_back', 'td_browser_forward', 'td_browser_refresh',
+    'td_dom_inspect', 'td_dom_query', 'td_dom_extract', 'td_dom_snapshot',
+    'td_target_find', 'td_target_check',
+    'td_action_click', 'td_action_type', 'td_action_select', 'td_action_press', 'td_action_scroll',
+    'td_wait', 'td_screenshot', 'td_execute_script',
+    'list_tabs', 'focus_tab', 'close_tab', 'open_tab',
+  ],
+  // Core profile: browser primitives + workflow runtime + target memory (~44 tools, ~4.8k tokens)
+  core: [
+    'td_browser_navigate', 'td_browser_back', 'td_browser_forward', 'td_browser_refresh',
+    'td_dom_inspect', 'td_dom_query', 'td_dom_extract', 'td_dom_snapshot',
+    'td_target_find', 'td_target_check', 'td_target_describe',
+    'td_action_click', 'td_action_type', 'td_action_select', 'td_action_hover', 'td_action_press', 'td_action_scroll',
+    'td_wait', 'td_screenshot', 'td_execute_script', 'td_network_inspect', 'td_console_read',
+    'td_workflow_save', 'td_workflow_get', 'td_workflow_list', 'td_workflow_update', 'td_workflow_delete',
+    'td_workflow_validate', 'td_workflow_run', 'td_workflow_runs', 'td_workflow_replay',
+    'td_target_memory_save', 'td_target_memory_get', 'td_target_memory_list', 'td_target_memory_delete',
+    'list_tabs', 'focus_tab', 'reload_tab', 'close_tab', 'open_tab',
+    'inspect_live_page', 'inspect_live_element',
+  ],
+  // Forensics profile: historical forensics + diffs + causality + live inspection (~50 tools)
+  forensics: [
+    'list_sessions', 'get_session', 'export_session', 'import_session', 'delete_session',
+    'get_timeline', 'get_events', 'get_events_around', 'get_dom_state', 'get_dom_node', 'get_dom_subtree',
+    'diff_dom', 'trace_element', 'find_disappearing_elements', 'why_did_element_disappear',
+    'get_diagnostics', 'get_network_events', 'get_screenshots',
+    'td_browser_navigate', 'td_dom_inspect', 'td_dom_query', 'td_dom_extract', 'td_screenshot',
+    'td_action_click', 'td_action_type', 'td_workflow_run', 'list_tabs', 'focus_tab',
+  ],
+  // Full profile: all 350 tools (null means no filtering)
+  full: null,
+};

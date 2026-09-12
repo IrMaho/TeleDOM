@@ -73,7 +73,9 @@ class TargetMemory:
         return self._client.call("td_target_memory_list", args)
 
     def delete(self, site: str, semantic_id: str) -> Any:
-        return self._client.call("td_target_memory_delete", {"site": site, "semanticId": semantic_id})
+        return self._client.call(
+            "td_target_memory_delete", {"site": site, "semanticId": semantic_id}
+        )
 
     def close(self) -> None:
         if self._owns_client:

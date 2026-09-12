@@ -1,13 +1,13 @@
 """Semantic Browser programming — the TeleDOM Level-2 primitive surface.
 
-    browser = Browser()                # spawns + connects TeleDOM
-    browser.navigate("https://any.site")   # any website — API never required
-    page = browser.inspect()           # observe (the agent's eyes)
-    hits = browser.query("Comments")   # find elements without selectors
-    target = browser.find(selector="#reply-box")
-    browser.click(target)
-    browser.type(target, "hello")
-    browser.verify(selector="#sent")
+browser = Browser()                # spawns + connects TeleDOM
+browser.navigate("https://any.site")   # any website — API never required
+page = browser.inspect()           # observe (the agent's eyes)
+hits = browser.query("Comments")   # find elements without selectors
+target = browser.find(selector="#reply-box")
+browser.click(target)
+browser.type(target, "hello")
+browser.verify(selector="#sent")
 """
 
 from __future__ import annotations
@@ -94,7 +94,12 @@ class Browser:
 
     # ── targeting ──────────────────────────────────────────────────────
 
-    def find(self, selector: Optional[str] = None, xpath: Optional[str] = None, text: Optional[str] = None) -> Any:
+    def find(
+        self,
+        selector: Optional[str] = None,
+        xpath: Optional[str] = None,
+        text: Optional[str] = None,
+    ) -> Any:
         """Find an element by selector / xpath / text → canonical TARGET with confidence."""
         args: dict = {}
         if selector:
@@ -109,7 +114,9 @@ class Browser:
 
     def verify(self, selector: str, min_confidence: float = 0.0) -> Any:
         """Cheap target verification — replaces full DOM re-analysis."""
-        return self._client.call("td_target_check", {"selector": selector, "minConfidence": min_confidence})
+        return self._client.call(
+            "td_target_check", {"selector": selector, "minConfidence": min_confidence}
+        )
 
     def describe(self, selector: str) -> Any:
         return self._client.call("td_target_describe", {"selector": selector})
@@ -155,7 +162,9 @@ class Browser:
         return self._client.call("td_execute_script", args)
 
     def network(self, url_contains: Optional[str] = None, limit: int = 50) -> Any:
-        return self._client.call("td_network_inspect", {"urlContains": url_contains, "limit": limit})
+        return self._client.call(
+            "td_network_inspect", {"urlContains": url_contains, "limit": limit}
+        )
 
     def console(self, level: str = "all") -> Any:
         return self._client.call("td_console_read", {"level": level})

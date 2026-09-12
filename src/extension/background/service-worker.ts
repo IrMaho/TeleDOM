@@ -335,7 +335,11 @@ async function executeBackgroundCommand(command: string, payload: any): Promise<
       }
       (chrome as any).debugger.attach({ tabId }, '1.3', () => {
         if (chrome.runtime.lastError) {
-          return reject(new Error(`CDP_ATTACH failed: ${chrome.runtime.lastError.message}`));
+          const errMsg = chrome.runtime.lastError.message || '';
+          if (errMsg.includes('Another debugger is already attached')) {
+            return reject(new Error(`CDP_ATTACH failed: Chrome DevTools (F12) is already open on tab ${tabId}. Please close the F12 panel on that tab so TeleDOM can attach.`));
+          }
+          return reject(new Error(`CDP_ATTACH failed: ${errMsg}`));
         }
         // Bind the gateway session to this tab (used by CDP_COMMAND/DETACH).
         if (payload?.sessionId) cdpTargetsBySession.set(String(payload.sessionId), tabId);
@@ -595,6 +599,28 @@ function ensureReconnect() {
         connectBridge();
       }
     }, 5000);
+  }
+}
+
+// Manifest V3 Service Worker Keep-Alive via chrome.alarms (prevents 30s idle termination)
+if (typeof chrome !== 'undefined' && chrome.alarms) {
+  try {
+    chrome.alarms.create('teledom_bridge_keepalive', { periodInMinutes: 0.4 });
+    chrome.alarms.onAlarm.addListener((alarm) => {
+      if (alarm.name === 'teledom_bridge_keepalive') {
+        if (!wsBridge || wsBridge.readyState !== WebSocket.OPEN) {
+          connectBridge();
+        } else {
+          try {
+            wsBridge.send(JSON.stringify({ type: 'HEARTBEAT', timestamp: Date.now() }));
+          } catch {
+            connectBridge();
+          }
+        }
+      }
+    });
+  } catch (err: any) {
+    console.warn('[ServiceWorker] Alarms keepalive setup failed:', err?.message);
   }
 }
 

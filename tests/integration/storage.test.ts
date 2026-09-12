@@ -174,8 +174,12 @@ describe('Storage Providers (Memory & File)', () => {
       expect(userPaged.every((e) => e.category === 'USER')).toBe(true);
     } finally {
       if (fs.existsSync(testDir)) {
-        fs.rmSync(testDir, { recursive: true, force: true });
+        try {
+          fs.rmSync(testDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+        } catch {
+          // Allow transient lock in Windows test runners to drain
+        }
       }
     }
-  });
+  }, 30_000);
 });

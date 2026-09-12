@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Extension smoke test — the golden v4.1 use case, as a reusable robot.
 
 The scenario the TeleDOM owner asked for: "I develop an extension; I want
@@ -24,11 +23,12 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 
-from teledom import Browser, Workflow, TargetMemory  # noqa: E402
+from teledom import Browser, TargetMemory, Workflow
 
 FIXTURE = os.path.abspath(
     os.path.join(HERE, "..", "..", "..", "operational-tests", "_fixtures", "dom-fixture.html")
 )
+
 
 def main() -> int:
     store = tempfile.mkdtemp(prefix="teledom-sdk-demo-")
@@ -54,8 +54,10 @@ def main() -> int:
         # ── LEARN — persist knowledge (agent-owned; TeleDOM just stores) ──
         mem = TargetMemory(client=browser.client)
         mem.save(
-            "example.test", "primary_action_button",
-            css="#primary-action-btn", aria="Run Analysis",
+            "example.test",
+            "primary_action_button",
+            css="#primary-action-btn",
+            aria="Run Analysis",
             identity={"role": "button", "accessibleName": "Run Analysis"},
             confidence=0.95,
             notes="verify with browser.verify(); repair with find()+describe() when the UI changes",
@@ -73,13 +75,28 @@ def main() -> int:
         wf.input("cta_selector", "Primary CTA selector", default="#primary-action-btn")
         wf.input("counter_selector", "Counter selector", default="#click-counter")
         wf.step("inspect", "td_dom_inspect", description="observe the page")
-        wf.step("verify_cta", "td_target_check", args={"selector": "{{inputs.cta_selector}}"},
-                description="cheap target check — no DOM re-analysis")
+        wf.step(
+            "verify_cta",
+            "td_target_check",
+            args={"selector": "{{inputs.cta_selector}}"},
+            description="cheap target check — no DOM re-analysis",
+        )
         wf.step("click_cta", "td_action_click", args={"selector": "{{inputs.cta_selector}}"})
-        wf.step("extract_counter", "td_dom_extract",
-                args={"selector": "{{inputs.counter_selector}}", "fields": {"text": "el.textContent.trim()"}})
-        wf.step("assert_state", "td_execute_script",
-                args={"code": 'return document.querySelector("{{inputs.counter_selector}}").textContent.trim();'})
+        wf.step(
+            "extract_counter",
+            "td_dom_extract",
+            args={
+                "selector": "{{inputs.counter_selector}}",
+                "fields": {"text": "el.textContent.trim()"},
+            },
+        )
+        wf.step(
+            "assert_state",
+            "td_execute_script",
+            args={
+                "code": 'return document.querySelector("{{inputs.counter_selector}}").textContent.trim();'
+            },
+        )
         wf.save(version="1.0.0")
         print("[LEARN] workflow saved (5 steps, 2 templated inputs, policy caps)")
 
@@ -92,9 +109,13 @@ def main() -> int:
         metrics = body.get("metrics", {})
         print(f"  runId      : {run.get('runId')}")
         print(f"  status     : {body.get('status')}")
-        print(f"  steps      : {[(s.get('stepId'), s.get('status')) for s in body.get('steps', [])]}")
-        print(f"  metrics    : toolCalls={metrics.get('toolCalls')} domScans={metrics.get('domScans')} "
-              f"duration={metrics.get('durationMs')}ms")
+        print(
+            f"  steps      : {[(s.get('stepId'), s.get('status')) for s in body.get('steps', [])]}"
+        )
+        print(
+            f"  metrics    : toolCalls={metrics.get('toolCalls')} domScans={metrics.get('domScans')} "
+            f"duration={metrics.get('durationMs')}ms"
+        )
 
         # ── REPLAY — deterministic re-execution of the recorded run ─────
         replay = wf.replay(run["runId"])
@@ -108,16 +129,20 @@ def main() -> int:
         check = browser.verify(css)
         if not check.get("resolvable", False):
             failures.append(f"recovery check not resolvable: {check}")
-        print(f"[RECOVERY]   : learned locator '{css}' resolvable={check.get('resolvable')} "
-              f"confidence={check.get('confidence')}")
+        print(
+            f"[RECOVERY]   : learned locator '{css}' resolvable={check.get('resolvable')} "
+            f"confidence={check.get('confidence')}"
+        )
 
     # ── KPI summary (the v4.1 golden demo) ──────────────────────────────
     print("\n=== KPIs ===")
     print("first run : 5 tool calls · 2 DOM scans · 5 MCP round trips")
-    print(f"reuse run : {metrics.get('toolCalls')} tool calls · {metrics.get('domScans')} DOM scans · 1 MCP round trip")
-    print(f"MCP round-trip reduction: 80%   DOM-scan reduction: 50%")
+    print(
+        f"reuse run : {metrics.get('toolCalls')} tool calls · {metrics.get('domScans')} DOM scans · 1 MCP round trip"
+    )
+    print("MCP round-trip reduction: 80%   DOM-scan reduction: 50%")
     print(f"tokensSavedEstimate     : {metrics.get('tokensSavedEstimate')}")
-    print(f"unsafe action bypass    : 0 (approval gates BLOCK, never auto-approve)")
+    print("unsafe action bypass    : 0 (approval gates BLOCK, never auto-approve)")
 
     if failures:
         print("\nFAILURES:", failures)

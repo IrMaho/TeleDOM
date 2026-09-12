@@ -33,7 +33,8 @@ export class CommandRecordingStorage {
       try {
         const raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
         return raw.recording || raw;
-      } catch {
+      } catch (err) {
+        console.warn(`[RecordingStorage] Warning: Failed to parse recording file ${file}:`, err);
         return null;
       }
     }
@@ -63,8 +64,8 @@ export class CommandRecordingStorage {
           tags: rec.tags || [],
           file: path.join(this.baseDir, entry.name),
         });
-      } catch {
-        // skip corrupt files
+      } catch (err) {
+        console.warn(`[RecordingStorage] Warning: Skipped corrupt recording file ${entry.name}:`, err);
       }
     }
     return out.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));

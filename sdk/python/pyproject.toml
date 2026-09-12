@@ -25,3 +25,35 @@ Homepage = "https://github.com/IrMaho/TeleDOM"
 
 [tool.setuptools.packages.find]
 include = ["teledom*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "RUF022"]
+ignore = [
+    "EXE001",
+    "UP045",
+    "BLE001",
+    "S110",
+    "PYI034",
+    "UP037",
+    "E402",
+    "E501",
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

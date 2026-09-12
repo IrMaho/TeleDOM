@@ -445,7 +445,8 @@ export class ForensicsToolsHandler {
     try {
       const res = await unifiedRuntime.bridgeCommand('LIVE_DOM_SNAPSHOT', { format: 'json' });
       return { snapshot: res };
-    } catch {
+    } catch (err: any) {
+      console.warn(`[ForensicsHandler] Could not capture live snapshot: ${err?.message || err}`);
       return { snapshot: null };
     }
   }
@@ -455,7 +456,8 @@ async function runInPageSafe(code: string, tabId?: number): Promise<Record<strin
   try {
     const { runInPage } = await import('../devtools/capabilities/interaction-core');
     return await runInPage(code, tabId);
-  } catch {
+  } catch (err: any) {
+    console.warn(`[ForensicsHandler] runInPageSafe failed for tab ${tabId}: ${err?.message || err}`);
     return null;
   }
 }

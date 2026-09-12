@@ -104,17 +104,19 @@ export class MCPBridgeServer implements BrowserBridgeClient {
         }
       }
 
-      // If no service worker connected, fallback to CONTENT_SCRIPT sockets
+      // If no service worker connected, fallback to a single primary CONTENT_SCRIPT socket (never broadcast commands to all tabs)
       if (targets.length === 0) {
         for (const [sock, meta] of this.socketMetadata.entries()) {
           if (meta.clientType === 'CONTENT_SCRIPT' && sock.readyState === WebSocket.OPEN) {
-            targets.push(sock);
+            targets = [sock];
+            break;
           }
         }
       }
 
-      if (targets.length === 0) {
-        targets = Array.from(this.activeSockets);
+      if (targets.length === 0 && this.activeSockets.size > 0) {
+        const first = Array.from(this.activeSockets).find((s) => s.readyState === WebSocket.OPEN);
+        if (first) targets = [first];
       }
 
       let sentCount = 0;
@@ -142,11 +144,28 @@ export class MCPBridgeServer implements BrowserBridgeClient {
 
   public start(): Promise<void> {
     return new Promise((resolve, reject) => {
+      const isTrustedOrigin = (origin?: string): boolean => {
+        if (!origin) return true; // Direct non-browser callers (Node, curl, stdio MCP)
+        if (origin.startsWith('chrome-extension://')) return true;
+        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+        return false;
+      };
+
       this.httpServer = http.createServer(async (req, res) => {
-        // Enable CORS
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        const origin = req.headers.origin;
+        if (origin) {
+          if (isTrustedOrigin(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Vary', 'Origin');
+          } else if (req.method === 'OPTIONS') {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'CORS Forbidden: Untrusted cross-origin request rejected' }));
+            return;
+          }
+        }
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-teledom-token');
 
         if (req.method === 'OPTIONS') {
           res.writeHead(204);
@@ -156,9 +175,29 @@ export class MCPBridgeServer implements BrowserBridgeClient {
 
         const url = req.url || '';
 
+        // Security check for mutating and sensitive endpoints
+        const isAuthValid = (): boolean => {
+          if (!isTrustedOrigin(origin)) return false;
+          const expectedToken = process.env.TELEDOM_BRIDGE_TOKEN;
+          if (!expectedToken) return true;
+          const authHeader = req.headers.authorization;
+          const tokenHeader = req.headers['x-teledom-token'];
+          let queryToken: string | null = null;
+          try {
+            const parsed = new URL(url, 'http://127.0.0.1');
+            queryToken = parsed.searchParams.get('token');
+          } catch { /* ignored */ }
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            return authHeader.slice(7).trim() === expectedToken;
+          }
+          if (tokenHeader && tokenHeader === expectedToken) return true;
+          if (queryToken && queryToken === expectedToken) return true;
+          return false;
+        };
+
         // 1. Health check (v4.1 fix E-17: version derived from the
         // authoritative registry — was stale '3.0.0')
-        if (url === '/health' && req.method === 'GET') {
+        if (url.startsWith('/health') && req.method === 'GET') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(
             JSON.stringify({
@@ -169,6 +208,15 @@ export class MCPBridgeServer implements BrowserBridgeClient {
             })
           );
           return;
+        }
+
+        // Enforce authorization for sensitive endpoints
+        if (['/api/mcp/tool', '/api/tabs/close', '/api/sessions/upload'].some(p => url.startsWith(p))) {
+          if (!isAuthValid()) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Forbidden: Invalid or missing authorization credentials' }));
+            return;
+          }
         }
 
         const MAX_PAYLOAD_BYTES = 50 * 1024 * 1024; // 50MB limit
@@ -301,7 +349,13 @@ export class MCPBridgeServer implements BrowserBridgeClient {
         }, 30000);
         (this.healthSweepInterval as any)?.unref?.();
 
-        this.wss.on('connection', (ws: WebSocket) => {
+        this.wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
+          const origin = req?.headers?.origin;
+          if (origin && !isTrustedOrigin(origin)) {
+            console.error(`[MCP Bridge] WebSocket connection rejected from untrusted origin: ${origin}`);
+            ws.close(4403, 'Forbidden origin');
+            return;
+          }
           this.activeSockets.add(ws);
           console.error(`[MCP Bridge] Client connected. Total active clients: ${this.activeSockets.size}`);
 

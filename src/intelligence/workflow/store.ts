@@ -149,7 +149,10 @@ export class AgentStore {
   private readJson<T>(file: string): T | null {
     try {
       return JSON.parse(fs.readFileSync(file, 'utf-8')) as T;
-    } catch {
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') {
+        console.warn(`[WorkflowStore] Warning: Failed to read or parse ${file}:`, err?.message || err);
+      }
       return null;
     }
   }
@@ -157,7 +160,10 @@ export class AgentStore {
   private listJsonNames(dir: string): string[] {
     try {
       return fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
-    } catch {
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') {
+        console.warn(`[WorkflowStore] Warning: Failed to list directory ${dir}:`, err?.message || err);
+      }
       return [];
     }
   }

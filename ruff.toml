@@ -1,0 +1,15 @@
+line-length = 100
+target-version = "py39"
+
+[lint]
+select = ["E", "F", "W", "I", "RUF022"]
+ignore = [
+    "EXE001",  # shebang executable check
+    "UP045",   # requires Python 3.10+ PEP 604; project supports Python 3.9+
+    "BLE001",  # blind exception catch during process teardown
+    "S110",    # try-except-pass in process termination
+    "PYI034",  # __enter__ return self
+    "UP037",   # quotes in type annotations
+    "E402",    # module level import not at top of file
+    "E501",    # line length handled by formatter
+]

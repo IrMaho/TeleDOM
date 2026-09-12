@@ -4,8 +4,7 @@ import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
 import readline from 'readline';
 import { JSDOM } from 'jsdom';
-import { FORENSIC_MCP_TOOLS, FileStorageProvider } from '../dist/server/mcp-server.js';
-import { PNGBuilder } from '../src/core/png-builder.ts';
+import { FORENSIC_MCP_TOOLS, FileStorageProvider, PNGBuilder } from '../dist/server/mcp-server.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

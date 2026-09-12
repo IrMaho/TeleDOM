@@ -1,6 +1,7 @@
 import * as readline from "readline";
 import * as fs from "fs";
-import { M as MCPDOM_V3_TOOLS, D as DEVTOOLS_TOOLS, F as FORENSICS_TOOLS, T as TELEDOM_INTELLIGENCE_TOOLS, a as TELEDOM_VERSION, b as FileStorageProvider, c as MCPToolsHandler, MCPBridgeServer } from "./bridge-server.js";
+import { M as MCPDOM_V3_TOOLS, D as DEVTOOLS_TOOLS, F as FORENSICS_TOOLS, T as TELEDOM_INTELLIGENCE_TOOLS, a as TELEDOM_VERSION, b as FileStorageProvider, c as MCPToolsHandler, MCPBridgeServer, d as TELEDOM_PROFILE_TOOLS } from "./bridge-server.js";
+import { P } from "./bridge-server.js";
 import "http";
 import "ws";
 import "path";
@@ -872,9 +873,15 @@ class ForensicMCPServer {
       const disableDevTools = process.env.FORENSIC_DISABLE_DEVTOOLS === "true";
       const disableForensics = process.env.FORENSIC_DISABLE_FORENSICS === "true";
       const disableIntelligence = process.env.FORENSIC_DISABLE_INTELLIGENCE === "true";
-      const tools = FORENSIC_MCP_TOOLS.filter(
+      const profile = (process.env.TELEDOM_PROFILE || "full").toLowerCase();
+      const profileAllowed = TELEDOM_PROFILE_TOOLS[profile];
+      let tools = FORENSIC_MCP_TOOLS.filter(
         (t) => !(disableDevTools && t.name.startsWith("dt_")) && !(disableForensics && t.name.startsWith("fx_")) && !(disableIntelligence && t.name.startsWith("td_"))
       );
+      if (profileAllowed && Array.isArray(profileAllowed)) {
+        const allowedSet = new Set(profileAllowed);
+        tools = tools.filter((t) => allowedSet.has(t.name));
+      }
       return {
         jsonrpc: "2.0",
         id,
@@ -1077,5 +1084,7 @@ export {
   FORENSIC_MCP_TOOLS,
   FileStorageProvider,
   ForensicMCPServer,
-  MCPToolsHandler
+  MCPToolsHandler,
+  P as PNGBuilder,
+  TELEDOM_PROFILE_TOOLS
 };

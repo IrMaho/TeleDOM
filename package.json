@@ -40,7 +40,10 @@
     "bench": "vitest run tests/intelligence/suite-reports.test.ts",
     "golden": "vitest run tests/intelligence/suite-reports.test.ts",
     "chaos": "vitest run tests/intelligence/suite-reports.test.ts",
-    "test:sdk": "python sdk/python/test_sdk.py"
+    "test:sdk": "python sdk/python/test_sdk.py",
+    "lint:python": "python -m ruff check sdk/python && python -m mypy sdk/python",
+    "format:python": "python -m isort sdk/python && python -m black sdk/python",
+    "qa:all": "npm run build && npm run test:unit && npm run test:sdk && npm run lint:python"
   },
   "keywords": [
     "browser",

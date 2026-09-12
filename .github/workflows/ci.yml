@@ -2,18 +2,19 @@ name: TeleDOM CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master, main, 'fix/**', 'feature/**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ master, main ]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
-    name: Build & Test (Node ${{ matrix.node-version }} on ${{ matrix.os }})
+    name: Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout Repository
@@ -32,6 +33,50 @@ jobs:
 
       - name: Run Unit Tests
         run: npm run test:unit
+        env:
+          NODE_OPTIONS: "--experimental-require-module"
 
       - name: Run Operational Test Suite
         run: npm run test:operational
+        env:
+          NODE_OPTIONS: "--experimental-require-module"
+
+  python-sdk:
+    name: Python ${{ matrix.python-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for bridge server in operational tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install Node Dependencies & Build Server
+        run: |
+          npm install
+          npm run build
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python QA Tools
+        run: python -m pip install ruff mypy
+
+      - name: Lint Python SDK (Ruff)
+        run: python -m ruff check sdk/python
+
+      - name: Typecheck Python SDK (Mypy)
+        run: python -m mypy sdk/python
+
+      - name: Run Python SDK Tests
+        run: python sdk/python/test_sdk.py
+

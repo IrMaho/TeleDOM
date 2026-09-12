@@ -48,8 +48,18 @@ class Workflow:
 
     # ── authoring ──────────────────────────────────────────────────────
 
-    def input(self, name: str, description: str = "", required: bool = False, default: Any = None) -> "Workflow":
-        self.inputs[name] = {"description": description, "required": required, "default": default}
+    def input(
+        self,
+        name: str,
+        description: str = "",
+        required: bool = False,
+        default: Any = None,
+    ) -> "Workflow":
+        self.inputs[name] = {
+            "description": description,
+            "required": required,
+            "default": default,
+        }
         return self
 
     def step(
@@ -63,7 +73,12 @@ class Workflow:
         timeout_ms: Optional[int] = None,
         description: str = "",
     ) -> "Workflow":
-        s: dict = {"id": step_id, "tool": tool, "onError": on_error, "description": description}
+        s: dict = {
+            "id": step_id,
+            "tool": tool,
+            "onError": on_error,
+            "description": description,
+        }
         if args:
             s["args"] = args
         if retry_count:
@@ -114,7 +129,12 @@ class Workflow:
 
     # ── dumb execution + records ───────────────────────────────────────
 
-    def run(self, inputs: Optional[dict] = None, approved_steps: Optional[list] = None, dry_run: bool = False) -> Any:
+    def run(
+        self,
+        inputs: Optional[dict] = None,
+        approved_steps: Optional[list] = None,
+        dry_run: bool = False,
+    ) -> Any:
         args: dict = {"name": self.name, "inputs": inputs or {}}
         if approved_steps:
             args["approvedSteps"] = approved_steps

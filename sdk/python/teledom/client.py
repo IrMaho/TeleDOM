@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import json
 import os
+import queue
 import subprocess
 import threading
-import queue
 from typing import Any, Optional
 
 
@@ -32,7 +32,9 @@ class TeleDOMClient:
         env: Optional[dict] = None,
         node_binary: str = "node",
     ):
-        self.server_path = server_path or os.environ.get("TELEDOM_SERVER_PATH") or self._default_server_path()
+        self.server_path = (
+            server_path or os.environ.get("TELEDOM_SERVER_PATH") or self._default_server_path()
+        )
         self.cwd = cwd
         self._proc: Optional[subprocess.Popen] = None
         self._env = env
@@ -95,7 +97,13 @@ class TeleDOMClient:
                 continue
             if "id" in msg:
                 self._responses.put(msg)
-        self._responses.put({"jsonrpc": "2.0", "id": -1, "error": {"message": "server closed the stream"}})
+        self._responses.put(
+            {
+                "jsonrpc": "2.0",
+                "id": -1,
+                "error": {"message": "server closed the stream"},
+            }
+        )
 
     def _next_id(self) -> int:
         with self._lock:
@@ -106,7 +114,12 @@ class TeleDOMClient:
 
     def request(self, method: str, params: Optional[dict] = None, timeout: float = 60.0) -> dict:
         rid = self._next_id()
-        payload = {"jsonrpc": "2.0", "id": rid, "method": method, "params": params or {}}
+        payload = {
+            "jsonrpc": "2.0",
+            "id": rid,
+            "method": method,
+            "params": params or {},
+        }
         assert self._proc and self._proc.stdin
         self._proc.stdin.write((json.dumps(payload) + "\n").encode("utf-8"))
         self._proc.stdin.flush()

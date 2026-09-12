@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Self-test for the TeleDOM Python SDK (no pytest required).
 
 Runs the full Level-2 surface against the deterministic DOM fixture:
@@ -13,9 +12,11 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from teledom import Browser, TeleDOMError, Workflow, TargetMemory  # noqa: E402
+from teledom import Browser, TargetMemory, Workflow
 
-FIXTURE = os.path.abspath(os.path.join(HERE, "..", "..", "operational-tests", "_fixtures", "dom-fixture.html"))
+FIXTURE = os.path.abspath(
+    os.path.join(HERE, "..", "..", "operational-tests", "_fixtures", "dom-fixture.html")
+)
 
 passed, failed = 0, 0
 
@@ -40,8 +41,14 @@ def main() -> int:
 
     with Browser(env=env) as browser:
         print("client:")
-        check("server handshake reports teledom", browser.server_info.get("name") == "teledom")
-        check("server version is 4.1.x", browser.server_info.get("version", "").startswith("4.1"))
+        check(
+            "server handshake reports teledom",
+            browser.server_info.get("name") == "teledom",
+        )
+        check(
+            "server version is 4.1.x",
+            browser.server_info.get("version", "").startswith("4.1"),
+        )
 
         tools = browser.client.list_tools()
         check("350 tools exposed over MCP", len(tools) == 350, f"got {len(tools)}")
@@ -60,9 +67,17 @@ def main() -> int:
 
         print("target memory:")
         mem = TargetMemory(client=browser.client)
-        mem.save("example.test", "primary_action_button", css="#primary-action-btn", confidence=0.95)
+        mem.save(
+            "example.test",
+            "primary_action_button",
+            css="#primary-action-btn",
+            confidence=0.95,
+        )
         target = mem.get("example.test", "primary_action_button").get("target", {})
-        check("learned target persisted", (target.get("locators") or {}).get("css") == "#primary-action-btn")
+        check(
+            "learned target persisted",
+            (target.get("locators") or {}).get("css") == "#primary-action-btn",
+        )
         listing = mem.list(site="example.test")
         check("target memory list works", listing.get("count", 0) >= 1)
 
@@ -70,15 +85,26 @@ def main() -> int:
         wf = Workflow("sdk_self_test", client=browser.client, description="SDK self-test workflow")
         wf.input("selector", "CTA selector", default="#primary-action-btn")
         wf.step("verify", "td_target_check", args={"selector": "{{inputs.selector}}"})
-        wf.step("assert", "td_execute_script", args={"code": 'return document.querySelector("{{inputs.selector}}") !== null;'})
+        wf.step(
+            "assert",
+            "td_execute_script",
+            args={"code": 'return document.querySelector("{{inputs.selector}}") !== null;'},
+        )
         saved = wf.save(version="1.0.0")
         check("workflow saved verbatim", saved.get("status") == "PASS")
 
         run = wf.run()
         body = run.get("run", {})
-        check("dumb execution SUCCESS", body.get("status") == "SUCCESS", str(body.get("error", "")))
+        check(
+            "dumb execution SUCCESS",
+            body.get("status") == "SUCCESS",
+            str(body.get("error", "")),
+        )
         check("deterministic record has metrics", "metrics" in body)
-        check("steps recorded with status", all("status" in s for s in body.get("steps", [])))
+        check(
+            "steps recorded with status",
+            all("status" in s for s in body.get("steps", [])),
+        )
 
         replay = wf.replay(run["runId"])
         check("verbatim replay works", replay.get("status") == "PASS")

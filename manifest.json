@@ -16,7 +16,8 @@
     "tabs",
     "webNavigation",
     "management",
-    "debugger"
+    "debugger",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"

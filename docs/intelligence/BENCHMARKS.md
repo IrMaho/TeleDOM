@@ -1,23 +1,23 @@
 # TeleDOM v4 — Measured Benchmarks & Suite Metrics
 
-Generated: 2026-09-11T18:05:59.466Z (local deterministic measurements on this machine — not marketing numbers)
+Generated: 2026-09-12T07:22:28.467Z (local deterministic measurements on this machine — not marketing numbers)
 
 ## Event-scale benchmark matrix
 
 | Metric | 10K events | 100K events | 1M events |
 |---|---|---|---|
-| Capture overhead (ms per 10K events) | 248.3 | 213.63 | 88.71 |
+| Capture overhead (ms per 10K events) | 211.58 | 180.81 | 135.08 |
 | Bytes per event (approx) | 352 | 355 | 358 |
-| Reconstruction p50 (ms) | 3.62 | 19.1 | 116.78 |
-| Reconstruction p95 (ms) | 5.7 | 30.08 | 234.64 |
-| Reconstruction p99 (ms) | 5.7 | 78.02 | 259.34 |
-| Temporal query p50 (ms) | 0.81 | 4.93 | 25.89 |
-| Temporal query p95 (ms) | 8.6 | 7.07 | 33.14 |
-| Temporal query p99 (ms) | 8.6 | 9.83 | 57.53 |
-| Graph query latency (ms) | 52.21 | 30.6 | 20.2 |
-| Investigation latency (ms) | 117.01 | 64.33 | 59.17 |
-| Branch simulation latency (ms) | 27.64 | 125.92 | 899.42 |
-| Recovery time (serialize+restore, ms) | 112.65 | 457.84 | 4467.36 |
+| Reconstruction p50 (ms) | 4.35 | 18.63 | 114.73 |
+| Reconstruction p95 (ms) | 25.14 | 43.18 | 226.75 |
+| Reconstruction p99 (ms) | 25.14 | 46.93 | 239.83 |
+| Temporal query p50 (ms) | 0.92 | 4.69 | 29.54 |
+| Temporal query p95 (ms) | 1.72 | 6.87 | 45.49 |
+| Temporal query p99 (ms) | 1.72 | 8.24 | 55.39 |
+| Graph query latency (ms) | 55.56 | 44.03 | 21.83 |
+| Investigation latency (ms) | 582.07 | 120.2 | 66.39 |
+| Branch simulation latency (ms) | 28.74 | 120.73 | 882.66 |
+| Recovery time (serialize+restore, ms) | 92.57 | 966.19 | 5446.28 |
 
 **Timestamp resolution: 0.01 ms — tracked SEPARATELY from reconstruction/query latency (never conflated).**
 

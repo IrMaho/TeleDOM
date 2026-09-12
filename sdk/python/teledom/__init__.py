@@ -24,19 +24,19 @@ can operate — social networks, CRMs, ERPs, admin panels, government portals,
 internal tools, sites with no public API at all.
 """
 
-from .client import TeleDOMClient, TeleDOMError
 from .browser import Browser
-from .workflow import Workflow, workflows
+from .client import TeleDOMClient, TeleDOMError
 from .targets import TargetMemory
+from .workflow import Workflow, workflows
 
 __version__ = "4.1.0"
 
 __all__ = [
+    "Browser",
+    "TargetMemory",
     "TeleDOMClient",
     "TeleDOMError",
-    "Browser",
     "Workflow",
-    "workflows",
-    "TargetMemory",
     "__version__",
+    "workflows",
 ]

@@ -55,5 +55,15 @@ if (typeof document === 'undefined') {
   global.__FORENSIC_SIMULATION__ = true;
 }
 
+const profileArg = process.argv.find((a) => a.startsWith('--profile='));
+if (profileArg) {
+  process.env.TELEDOM_PROFILE = profileArg.split('=')[1];
+} else {
+  const profileIdx = process.argv.indexOf('--profile');
+  if (profileIdx !== -1 && process.argv[profileIdx + 1]) {
+    process.env.TELEDOM_PROFILE = process.argv[profileIdx + 1];
+  }
+}
+
 const server = new ForensicMCPServer();
 server.startStdio();

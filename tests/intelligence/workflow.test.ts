@@ -31,7 +31,13 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env.TELEDOM_AGENT_STORE_DIR;
-  fs.rmSync(tmpDir, { recursive: true, force: true });
+  if (tmpDir && fs.existsSync(tmpDir)) {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    } catch {
+      // Allow transient lock in Windows test runners to drain
+    }
+  }
 });
 
 function makeWorkflow(overrides: Partial<AgentWorkflow> = {}): AgentWorkflow {

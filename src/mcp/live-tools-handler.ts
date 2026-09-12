@@ -687,8 +687,18 @@ export class LiveToolsHandler {
             },
           ],
         };
-      } catch {
-        // Fallthrough
+      } catch (saveErr: any) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                ...finalSummary,
+                fileSaveError: `Failed to write pipeline output to ${args.outputPath}: ${saveErr?.message || saveErr}`,
+              }, null, 2),
+            },
+          ],
+        };
       }
     }
 

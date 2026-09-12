@@ -11,8 +11,10 @@ import { LiveToolsHandler, BrowserBridgeClient } from './live-tools-handler';
 import { MCPBridgeServer } from './bridge-server';
 import { BrowserCommandType } from '../types/browser-control';
 import { TELEDOM_VERSION } from '../intelligence/version';
+import { TELEDOM_PROFILE_TOOLS } from './tool-groups';
+import { PNGBuilder } from '../core/png-builder';
 
-export { FORENSIC_MCP_TOOLS, FileStorageProvider, MCPToolsHandler };
+export { FORENSIC_MCP_TOOLS, FileStorageProvider, MCPToolsHandler, TELEDOM_PROFILE_TOOLS, PNGBuilder };
 
 export class ForensicMCPServer {
   private storage: ForensicStorageProvider;
@@ -208,12 +210,21 @@ export class ForensicMCPServer {
       const disableDevTools = process.env.FORENSIC_DISABLE_DEVTOOLS === 'true';
       const disableForensics = process.env.FORENSIC_DISABLE_FORENSICS === 'true';
       const disableIntelligence = process.env.FORENSIC_DISABLE_INTELLIGENCE === 'true';
-      const tools = FORENSIC_MCP_TOOLS.filter(
+      const profile = (process.env.TELEDOM_PROFILE || 'full').toLowerCase();
+      const profileAllowed = TELEDOM_PROFILE_TOOLS[profile];
+
+      let tools = FORENSIC_MCP_TOOLS.filter(
         (t) =>
           !(disableDevTools && t.name.startsWith('dt_')) &&
           !(disableForensics && t.name.startsWith('fx_')) &&
           !(disableIntelligence && t.name.startsWith('td_')),
       );
+
+      if (profileAllowed && Array.isArray(profileAllowed)) {
+        const allowedSet = new Set(profileAllowed);
+        tools = tools.filter((t) => allowedSet.has(t.name));
+      }
+
       return {
         jsonrpc: '2.0',
         id,

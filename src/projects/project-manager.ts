@@ -124,8 +124,8 @@ export class ProjectManager {
       try {
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
         out.push({ ...manifest, projectDir: path.join(this.baseDir, entry.name), pageCount: manifest.pages?.length || 0 });
-      } catch {
-        // Corrupt manifest — skip but do not crash the listing
+      } catch (err) {
+        console.warn(`[ProjectManager] Warning: Skipped corrupt project manifest at ${manifestPath}:`, err);
       }
     }
     return out.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -443,7 +443,9 @@ export class ProjectManager {
       if (fs.existsSync(p)) {
         try {
           out.push(JSON.parse(fs.readFileSync(p, 'utf-8')));
-        } catch { /* skip corrupt */ }
+        } catch (err) {
+          console.warn(`[ProjectManager] Warning: Skipped corrupt region file ${p}:`, err);
+        }
       }
     }
     return out;
